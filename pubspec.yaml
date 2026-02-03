@@ -1,0 +1,41 @@
+name: church_radio_app
+description: Church of the Firstborn Assembly Radio Streaming App
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  just_audio: ^0.9.36
+  audio_service: ^0.18.12
+  url_launcher: ^6.2.1
+  google_fonts: ^6.1.0
+  font_awesome_flutter: ^10.6.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.jpg"
+  adaptive_icon_background: "#0d1b2a"
+  adaptive_icon_foreground: "assets/logo.jpg"
+  web:
+    generate: true
+    image_path: "assets/logo.jpg"
+  windows:
+    generate: true
+    image_path: "assets/logo.jpg"
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/logo.jpg
