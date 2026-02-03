@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:audio_session/audio_session.dart';
-import '../config/app_config.dart';
+import '../main.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   const AudioPlayerWidget({super.key});
@@ -10,10 +9,7 @@ class AudioPlayerWidget extends StatefulWidget {
   State<AudioPlayerWidget> createState() => _AudioPlayerWidgetState();
 }
 
-class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  late AudioPlayer _audioPlayer;
-  
+class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   bool _isLoading = false;
   bool _isPlaying = false;
   bool _isMuted = false;
@@ -23,53 +19,35 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    _audioPlayer = AudioPlayer();
-    _audioPlayer.setVolume(_volume);
-    _initAudioSession();
+    audioHandler.setVolume(_volume);
     
     // Listen to player state changes
-    _audioPlayer.playerStateStream.listen((state) {
+    audioHandler.playingStream.listen((playing) {
       if (mounted) {
         setState(() {
-          _isPlaying = state.playing;
-          if (state.playing) {
+          _isPlaying = playing;
+          if (playing) {
             _isLoading = false;
-          } else {
-            _isLoading = state.processingState == ProcessingState.loading ||
-                         state.processingState == ProcessingState.buffering;
           }
         });
       }
     });
     
-    // Listen for errors
-    _audioPlayer.playbackEventStream.listen(
-      (event) {},
-      onError: (Object e, StackTrace st) {
-        if (mounted) {
-          setState(() {
-            _errorMessage = 'Unable to connect to stream';
-            _isLoading = false;
-          });
-        }
-      },
-    );
+    audioHandler.processingStateStream.listen((state) {
+      if (mounted) {
+        setState(() {
+          if (!_isPlaying) {
+            _isLoading = state == ProcessingState.loading ||
+                         state == ProcessingState.buffering;
+          }
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _audioPlayer.stop();
-    _audioPlayer.dispose();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.detached) {
-      _audioPlayer.stop();
-    }
   }
 
   Future<void> _togglePlayPause() async {
@@ -78,7 +56,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     });
     
     if (_isPlaying) {
-      await _audioPlayer.stop();
+      await audioHandler.stop();
       setState(() {
         _isPlaying = false;
       });
@@ -88,8 +66,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
       });
       
       try {
-        await _audioPlayer.setUrl(AppConfig.radioStreamUrl);
-        await _audioPlayer.play();
+        await audioHandler.play();
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -110,24 +87,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
     setState(() {
       _isMuted = !_isMuted;
     });
-    _audioPlayer.setVolume(_isMuted ? 0.0 : _volume);
-  }
-
-  Future<void> _initAudioSession() async {
-    final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
-      avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.defaultPolicy,
-      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-      androidAudioAttributes: AndroidAudioAttributes(
-        contentType: AndroidAudioContentType.music,
-        usage: AndroidAudioUsage.media,
-      ),
-      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
-      androidWillPauseWhenDucked: false,
-    ));
+    audioHandler.setVolume(_isMuted ? 0.0 : _volume);
   }
 
   @override
@@ -188,7 +148,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget>
                     _volume = value;
                     _isMuted = value == 0;
                   });
-                  _audioPlayer.setVolume(value);
+                  audioHandler.setVolume(value);
                 },
               ),
             ),
