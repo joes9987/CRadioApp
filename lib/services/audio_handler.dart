@@ -5,29 +5,31 @@ import '../config/app_config.dart';
 /// Custom AudioHandler for background audio playback
 class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   final AudioPlayer _player = AudioPlayer();
-  
-  bool _isInitialized = false;
 
   RadioAudioHandler() {
-    _init();
-  }
-
-  Future<void> _init() async {
-    // Broadcast playback state changes
-    _player.playbackEventStream.map(_transformEvent).pipe(playbackState);
-    
-    // Set the media item
+    // Set up the media item immediately
     mediaItem.add(MediaItem(
       id: AppConfig.radioStreamUrl,
       album: AppConfig.churchName,
       title: AppConfig.radioStationName,
       artist: AppConfig.tagline,
-      artUri: null, // Could add artwork URI here
+      playable: true,
+      displayTitle: AppConfig.radioStationName,
+      displaySubtitle: AppConfig.churchName,
     ));
+    
+    // Broadcast player state changes to the audio service
+    _player.playbackEventStream.listen((event) {
+      _broadcastState();
+    });
+    
+    _player.playerStateStream.listen((state) {
+      _broadcastState();
+    });
   }
 
-  PlaybackState _transformEvent(PlaybackEvent event) {
-    return PlaybackState(
+  void _broadcastState() {
+    playbackState.add(PlaybackState(
       controls: [
         if (_player.playing) MediaControl.pause else MediaControl.play,
         MediaControl.stop,
@@ -38,28 +40,43 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
         MediaAction.stop,
       },
       androidCompactActionIndices: const [0, 1],
-      processingState: const {
-        ProcessingState.idle: AudioProcessingState.idle,
-        ProcessingState.loading: AudioProcessingState.loading,
-        ProcessingState.buffering: AudioProcessingState.buffering,
-        ProcessingState.ready: AudioProcessingState.ready,
-        ProcessingState.completed: AudioProcessingState.completed,
-      }[_player.processingState]!,
+      processingState: _getProcessingState(),
       playing: _player.playing,
       updatePosition: _player.position,
       bufferedPosition: _player.bufferedPosition,
       speed: _player.speed,
       queueIndex: 0,
-    );
+    ));
+  }
+
+  AudioProcessingState _getProcessingState() {
+    switch (_player.processingState) {
+      case ProcessingState.idle:
+        return AudioProcessingState.idle;
+      case ProcessingState.loading:
+        return AudioProcessingState.loading;
+      case ProcessingState.buffering:
+        return AudioProcessingState.buffering;
+      case ProcessingState.ready:
+        return AudioProcessingState.ready;
+      case ProcessingState.completed:
+        return AudioProcessingState.completed;
+    }
   }
 
   @override
   Future<void> play() async {
-    if (!_isInitialized) {
-      await _player.setUrl(AppConfig.radioStreamUrl);
-      _isInitialized = true;
+    try {
+      // Set URL if not already set or if completed
+      if (_player.processingState == ProcessingState.idle ||
+          _player.processingState == ProcessingState.completed) {
+        await _player.setUrl(AppConfig.radioStreamUrl);
+      }
+      await _player.play();
+    } catch (e) {
+      // Handle error
+      print('Error playing audio: $e');
     }
-    await _player.play();
   }
 
   @override
@@ -70,8 +87,6 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
   @override
   Future<void> stop() async {
     await _player.stop();
-    _isInitialized = false;
-    // Reset to beginning
     await _player.seek(Duration.zero);
   }
 
@@ -92,7 +107,8 @@ class RadioAudioHandler extends BaseAudioHandler with SeekHandler {
 
   @override
   Future<void> onTaskRemoved() async {
-    await stop();
+    // Keep playing when app is removed from recents (optional - remove if you want it to stop)
+    // await stop();
     await super.onTaskRemoved();
   }
 }

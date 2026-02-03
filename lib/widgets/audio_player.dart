@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:audio_session/audio_session.dart';
+import '../config/app_config.dart';
 import '../main.dart';
+import '../services/battery_optimization.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   const AudioPlayerWidget({super.key});
@@ -10,43 +14,104 @@ class AudioPlayerWidget extends StatefulWidget {
 }
 
 class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
+  // Fallback player if audio_service isn't available
+  AudioPlayer? _fallbackPlayer;
+  
   bool _isLoading = false;
   bool _isPlaying = false;
   bool _isMuted = false;
   String? _errorMessage;
   double _volume = 0.8;
 
+  bool get _useAudioService => audioHandler != null;
+
   @override
   void initState() {
     super.initState();
-    audioHandler.setVolume(_volume);
-    
-    // Listen to player state changes
-    audioHandler.playingStream.listen((playing) {
-      if (mounted) {
-        setState(() {
-          _isPlaying = playing;
-          if (playing) {
-            _isLoading = false;
+    _initPlayer();
+  }
+
+  Future<void> _initPlayer() async {
+    if (_useAudioService) {
+      // Use audio service for background playback
+      audioHandler!.setVolume(_volume);
+      
+      audioHandler!.playingStream.listen((playing) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = playing;
+            if (playing) {
+              _isLoading = false;
+            }
+          });
+        }
+      });
+      
+      audioHandler!.processingStateStream.listen((state) {
+        if (mounted) {
+          setState(() {
+            if (!_isPlaying) {
+              _isLoading = state == ProcessingState.loading ||
+                           state == ProcessingState.buffering;
+            }
+          });
+        }
+      });
+    } else {
+      // Fallback to local player
+      _fallbackPlayer = AudioPlayer();
+      _fallbackPlayer!.setVolume(_volume);
+      await _initAudioSession();
+      
+      _fallbackPlayer!.playerStateStream.listen((state) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = state.playing;
+            if (state.playing) {
+              _isLoading = false;
+            } else {
+              _isLoading = state.processingState == ProcessingState.loading ||
+                           state.processingState == ProcessingState.buffering;
+            }
+          });
+        }
+      });
+      
+      _fallbackPlayer!.playbackEventStream.listen(
+        (event) {},
+        onError: (Object e, StackTrace st) {
+          if (mounted) {
+            setState(() {
+              _errorMessage = 'Unable to connect to stream';
+              _isLoading = false;
+            });
           }
-        });
-      }
-    });
-    
-    audioHandler.processingStateStream.listen((state) {
-      if (mounted) {
-        setState(() {
-          if (!_isPlaying) {
-            _isLoading = state == ProcessingState.loading ||
-                         state == ProcessingState.buffering;
-          }
-        });
-      }
-    });
+        },
+      );
+    }
+  }
+
+  Future<void> _initAudioSession() async {
+    final session = await AudioSession.instance;
+    await session.configure(const AudioSessionConfiguration(
+      avAudioSessionCategory: AVAudioSessionCategory.playback,
+      avAudioSessionCategoryOptions: AVAudioSessionCategoryOptions.mixWithOthers,
+      avAudioSessionMode: AVAudioSessionMode.defaultMode,
+      avAudioSessionRouteSharingPolicy: AVAudioSessionRouteSharingPolicy.defaultPolicy,
+      avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+      androidAudioAttributes: AndroidAudioAttributes(
+        contentType: AndroidAudioContentType.music,
+        usage: AndroidAudioUsage.media,
+      ),
+      androidAudioFocusGainType: AndroidAudioFocusGainType.gain,
+      androidWillPauseWhenDucked: false,
+    ));
   }
 
   @override
   void dispose() {
+    _fallbackPlayer?.stop();
+    _fallbackPlayer?.dispose();
     super.dispose();
   }
 
@@ -56,7 +121,11 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     });
     
     if (_isPlaying) {
-      await audioHandler.stop();
+      if (_useAudioService) {
+        await audioHandler!.stop();
+      } else {
+        await _fallbackPlayer?.stop();
+      }
       setState(() {
         _isPlaying = false;
       });
@@ -65,8 +134,21 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         _isLoading = true;
       });
       
+      // Request battery optimization exemption on Android
+      if (Platform.isAndroid) {
+        final isIgnoring = await BatteryOptimization.isIgnoringBatteryOptimizations();
+        if (!isIgnoring) {
+          await BatteryOptimization.requestIgnoreBatteryOptimizations();
+        }
+      }
+      
       try {
-        await audioHandler.play();
+        if (_useAudioService) {
+          await audioHandler!.play();
+        } else {
+          await _fallbackPlayer?.setUrl(AppConfig.radioStreamUrl);
+          await _fallbackPlayer?.play();
+        }
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -87,7 +169,24 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     setState(() {
       _isMuted = !_isMuted;
     });
-    audioHandler.setVolume(_isMuted ? 0.0 : _volume);
+    final volume = _isMuted ? 0.0 : _volume;
+    if (_useAudioService) {
+      audioHandler!.setVolume(volume);
+    } else {
+      _fallbackPlayer?.setVolume(volume);
+    }
+  }
+
+  void _setVolume(double value) {
+    setState(() {
+      _volume = value;
+      _isMuted = value == 0;
+    });
+    if (_useAudioService) {
+      audioHandler!.setVolume(value);
+    } else {
+      _fallbackPlayer?.setVolume(value);
+    }
   }
 
   @override
@@ -143,13 +242,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 value: _isMuted ? 0.0 : _volume,
                 min: 0.0,
                 max: 1.0,
-                onChanged: (value) {
-                  setState(() {
-                    _volume = value;
-                    _isMuted = value == 0;
-                  });
-                  audioHandler.setVolume(value);
-                },
+                onChanged: _setVolume,
               ),
             ),
           ),
@@ -209,10 +302,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             
             SizedBox(width: screenWidth * 0.04),
             
-            // Info button (placeholder - can be used for about/info screen)
+            // Info button
             GestureDetector(
               onTap: () {
-                // Show info dialog
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
