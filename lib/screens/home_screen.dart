@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import '../config/app_config.dart';
 import '../widgets/audio_player.dart';
@@ -29,7 +30,7 @@ class HomeScreen extends StatelessWidget {
             SafeArea(
               child: Column(
                 children: [
-                  // Title bar at top
+                  // Radio Station Name at top (header bar)
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.symmetric(
@@ -54,9 +55,9 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      AppConfig.churchName,
+                      AppConfig.radioStationName.toUpperCase(),
                       style: TextStyle(
-                        fontSize: screenWidth * 0.08,
+                        fontSize: screenWidth * 0.065,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                         letterSpacing: 1,
@@ -66,12 +67,12 @@ class HomeScreen extends StatelessWidget {
                   ),
                   
                   // Spacer
-                  SizedBox(height: screenHeight * 0.04),
+                  SizedBox(height: screenHeight * 0.03),
                   
                   // Large logo in white frame
                   Container(
-                    width: screenWidth * 0.85,
-                    height: screenHeight * 0.35,
+                    width: screenWidth * 0.75,
+                    height: screenHeight * 0.28,
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
@@ -106,6 +107,38 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
                   
+                  SizedBox(height: screenHeight * 0.03),
+                  
+                  // Church name (centered, below logo)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                    child: Text(
+                      AppConfig.churchName.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.055,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.5,
+                        height: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  
+                  SizedBox(height: screenHeight * 0.01),
+                  
+                  // Tagline in blue italic
+                  Text(
+                    AppConfig.tagline,
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: screenWidth * 0.055,
+                      fontStyle: FontStyle.italic,
+                      color: AppTheme.lightBlue,
+                      letterSpacing: 0.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  
                   // Spacer - pushes controls to bottom
                   const Spacer(),
                   
@@ -113,6 +146,19 @@ class HomeScreen extends StatelessWidget {
                   const AudioPlayerWidget(),
                   
                   SizedBox(height: screenHeight * 0.02),
+                  
+                  // "CONNECT WITH US" text
+                  Text(
+                    'CONNECT WITH US',
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.035,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.lightBlue,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  
+                  SizedBox(height: screenHeight * 0.01),
                   
                   // Social Links
                   const SocialLinksWidget(),

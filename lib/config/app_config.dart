@@ -1,6 +1,6 @@
 class AppConfig {
   // Church Information
-  static const String churchName = 'Church 668 Radio';
+  static const String churchName = 'The Church of the First Born Assembly Miracle Center';
   static const String tagline = 'Bringing Hope to the World';
   
   // Radio Stream
