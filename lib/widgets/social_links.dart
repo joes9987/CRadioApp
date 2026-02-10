@@ -16,14 +16,30 @@ class SocialLinksWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final shortestSide = screenWidth < screenHeight ? screenWidth : screenHeight;
+    
+    // Responsive sizing with constraints
+    final buttonSize = (screenWidth * 0.11).clamp(36.0, 56.0);
+    final iconSize = (buttonSize * 0.42).clamp(14.0, 24.0);
+    final buttonSpacing = (screenWidth * 0.03).clamp(8.0, 20.0);
+    final containerPadding = (screenWidth * 0.035).clamp(10.0, 20.0);
+    final containerVerticalPadding = (screenHeight * 0.01).clamp(6.0, 14.0);
+    final borderRadius = (shortestSide * 0.06).clamp(18.0, 30.0);
+    final borderWidth = (shortestSide * 0.004).clamp(1.0, 2.0);
+    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: EdgeInsets.symmetric(
+            horizontal: containerPadding,
+            vertical: containerVerticalPadding,
+          ),
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(25),
+            borderRadius: BorderRadius.circular(borderRadius),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -33,30 +49,45 @@ class SocialLinksWidget extends StatelessWidget {
                 icon: FontAwesomeIcons.facebook,
                 onTap: () => _launchUrl(AppConfig.facebookUrl),
                 label: 'Facebook',
+                size: buttonSize,
+                iconSize: iconSize,
+                borderWidth: borderWidth,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: buttonSpacing),
               _SocialButton(
                 icon: FontAwesomeIcons.whatsapp,
                 onTap: () => _launchUrl(AppConfig.whatsappUrl),
                 label: 'WhatsApp',
+                size: buttonSize,
+                iconSize: iconSize,
+                borderWidth: borderWidth,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: buttonSpacing),
               _SocialButton(
                 icon: FontAwesomeIcons.youtube,
                 onTap: () => _launchUrl(AppConfig.youtubeUrl),
                 label: 'YouTube',
+                size: buttonSize,
+                iconSize: iconSize,
+                borderWidth: borderWidth,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: buttonSpacing),
               _SocialButton(
                 icon: FontAwesomeIcons.xTwitter,
                 onTap: () => _launchUrl(AppConfig.twitterUrl),
                 label: 'X',
+                size: buttonSize,
+                iconSize: iconSize,
+                borderWidth: borderWidth,
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: buttonSpacing),
               _SocialButton(
                 icon: FontAwesomeIcons.globe,
                 onTap: () => _launchUrl(AppConfig.websiteUrl),
                 label: 'Website',
+                size: buttonSize,
+                iconSize: iconSize,
+                borderWidth: borderWidth,
               ),
             ],
           ),
@@ -70,11 +101,17 @@ class _SocialButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onTap;
   final String label;
+  final double size;
+  final double iconSize;
+  final double borderWidth;
 
   const _SocialButton({
     required this.icon,
     required this.onTap,
     required this.label,
+    required this.size,
+    required this.iconSize,
+    required this.borderWidth,
   });
 
   @override
@@ -95,8 +132,8 @@ class _SocialButtonState extends State<_SocialButton> {
         onTapCancel: () => setState(() => _isHovered = false),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          width: 48,
-          height: 48,
+          width: widget.size,
+          height: widget.size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: _isHovered 
@@ -106,13 +143,13 @@ class _SocialButtonState extends State<_SocialButton> {
               color: _isHovered 
                   ? AppTheme.lightBlue 
                   : AppTheme.lightBlue.withOpacity(0.4),
-              width: 1.5,
+              width: widget.borderWidth,
             ),
           ),
           child: Center(
             child: FaIcon(
               widget.icon,
-              size: 20,
+              size: widget.iconSize,
               color: _isHovered ? AppTheme.textWhite : AppTheme.lightBlue,
             ),
           ),

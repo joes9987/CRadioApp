@@ -13,6 +13,25 @@ class HomeScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
     
+    // Calculate responsive sizes based on screen dimensions
+    // Use the smaller dimension to ensure everything fits
+    final shortestSide = screenWidth < screenHeight ? screenWidth : screenHeight;
+    final isSmallScreen = screenHeight < 700;
+    final isVerySmallScreen = screenHeight < 600;
+    
+    // Responsive spacing multipliers
+    final spacingMultiplier = isVerySmallScreen ? 0.6 : (isSmallScreen ? 0.8 : 1.0);
+    
+    // Logo size - scales with screen but has min/max bounds
+    final logoWidth = (screenWidth * 0.75).clamp(200.0, 400.0);
+    final logoHeight = (screenHeight * 0.25 * spacingMultiplier).clamp(150.0, 300.0);
+    
+    // Text sizes - responsive with min/max
+    final headerFontSize = (screenWidth * 0.06).clamp(18.0, 28.0);
+    final churchNameFontSize = (screenWidth * 0.05).clamp(14.0, 24.0);
+    final taglineFontSize = (screenWidth * 0.05).clamp(14.0, 22.0);
+    final connectFontSize = (screenWidth * 0.035).clamp(10.0, 16.0);
+    
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -22,149 +41,182 @@ class HomeScreen extends StatelessWidget {
             // Metal mesh background
             Positioned.fill(
               child: CustomPaint(
-                painter: _MetalMeshPainter(),
+                painter: _MetalMeshPainter(shortestSide: shortestSide),
               ),
             ),
             
-            // Main content
+            // Main content - use SingleChildScrollView for overflow protection
             SafeArea(
-              child: Column(
-                children: [
-                  // Radio Station Name at top (header bar)
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(
-                      vertical: screenHeight * 0.02,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFF2a2a2a),
-                          const Color(0xFF1a1a1a),
-                          Colors.black.withOpacity(0.8),
-                        ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                      border: const Border(
-                        bottom: BorderSide(
-                          color: Color(0xFF444444),
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      AppConfig.radioStationName.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.065,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  
-                  // Spacer
-                  SizedBox(height: screenHeight * 0.03),
-                  
-                  // Large logo in white frame
-                  Container(
-                    width: screenWidth * 0.75,
-                    height: screenHeight * 0.28,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: const Color(0xFF555555),
-                        width: 3,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.5),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        AppConfig.logoPath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.white,
-                            child: Icon(
-                              Icons.church,
-                              size: screenWidth * 0.3,
-                              color: AppTheme.primaryBlue,
+                      child: IntrinsicHeight(
+                        child: Column(
+                          children: [
+                            // Radio Station Name at top (header bar)
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                vertical: screenHeight * 0.015 * spacingMultiplier,
+                                horizontal: screenWidth * 0.04,
+                              ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    const Color(0xFF2a2a2a),
+                                    const Color(0xFF1a1a1a),
+                                    Colors.black.withOpacity(0.8),
+                                  ],
+                                ),
+                                border: const Border(
+                                  bottom: BorderSide(
+                                    color: Color(0xFF444444),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  AppConfig.radioStationName.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: headerFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 1,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
                             ),
-                          );
-                        },
+                            
+                            // Spacer
+                            SizedBox(height: screenHeight * 0.02 * spacingMultiplier),
+                            
+                            // Large logo in white frame
+                            Container(
+                              width: logoWidth,
+                              height: logoHeight,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(shortestSide * 0.03),
+                                border: Border.all(
+                                  color: const Color(0xFF555555),
+                                  width: (shortestSide * 0.008).clamp(2.0, 4.0),
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: shortestSide * 0.05,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(shortestSide * 0.02),
+                                child: Image.asset(
+                                  AppConfig.logoPath,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      color: Colors.white,
+                                      child: Icon(
+                                        Icons.church,
+                                        size: logoWidth * 0.4,
+                                        color: AppTheme.primaryBlue,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(height: screenHeight * 0.02 * spacingMultiplier),
+                            
+                            // Church name (centered, below logo)
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  AppConfig.churchName.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: churchNameFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    letterSpacing: 0.5,
+                                    height: 1.2,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(height: screenHeight * 0.008 * spacingMultiplier),
+                            
+                            // Tagline in blue italic
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  AppConfig.tagline,
+                                  style: GoogleFonts.playfairDisplay(
+                                    fontSize: taglineFontSize,
+                                    fontStyle: FontStyle.italic,
+                                    color: AppTheme.lightBlue,
+                                    letterSpacing: 0.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                            
+                            // Flexible spacer - pushes controls to bottom
+                            Expanded(
+                              child: SizedBox(
+                                height: screenHeight * 0.02,
+                              ),
+                            ),
+                            
+                            // Audio Player (volume slider + buttons)
+                            const AudioPlayerWidget(),
+                            
+                            SizedBox(height: screenHeight * 0.015 * spacingMultiplier),
+                            
+                            // "CONNECT WITH US" text
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'CONNECT WITH US',
+                                style: TextStyle(
+                                  fontSize: connectFontSize,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.lightBlue,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                            ),
+                            
+                            SizedBox(height: screenHeight * 0.008 * spacingMultiplier),
+                            
+                            // Social Links
+                            const SocialLinksWidget(),
+                            
+                            SizedBox(height: screenHeight * 0.015 * spacingMultiplier),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  
-                  SizedBox(height: screenHeight * 0.03),
-                  
-                  // Church name (centered, below logo)
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-                    child: Text(
-                      AppConfig.churchName.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: screenWidth * 0.055,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
-                        height: 1.2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  
-                  SizedBox(height: screenHeight * 0.01),
-                  
-                  // Tagline in blue italic
-                  Text(
-                    AppConfig.tagline,
-                    style: GoogleFonts.playfairDisplay(
-                      fontSize: screenWidth * 0.055,
-                      fontStyle: FontStyle.italic,
-                      color: AppTheme.lightBlue,
-                      letterSpacing: 0.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  
-                  // Spacer - pushes controls to bottom
-                  const Spacer(),
-                  
-                  // Audio Player (volume slider + buttons)
-                  const AudioPlayerWidget(),
-                  
-                  SizedBox(height: screenHeight * 0.02),
-                  
-                  // "CONNECT WITH US" text
-                  Text(
-                    'CONNECT WITH US',
-                    style: TextStyle(
-                      fontSize: screenWidth * 0.035,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.lightBlue,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  
-                  SizedBox(height: screenHeight * 0.01),
-                  
-                  // Social Links
-                  const SocialLinksWidget(),
-                  
-                  SizedBox(height: screenHeight * 0.02),
-                ],
+                  );
+                },
               ),
             ),
           ],
@@ -176,6 +228,10 @@ class HomeScreen extends StatelessWidget {
 
 // Custom painter for metal mesh perforated pattern
 class _MetalMeshPainter extends CustomPainter {
+  final double shortestSide;
+  
+  _MetalMeshPainter({required this.shortestSide});
+  
   @override
   void paint(Canvas canvas, Size size) {
     // Dark metal background
@@ -194,8 +250,9 @@ class _MetalMeshPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
     
-    const double holeRadius = 5;
-    const double spacing = 18;
+    // Scale hole size and spacing based on screen size
+    final double holeRadius = (shortestSide * 0.012).clamp(3.0, 6.0);
+    final double spacing = (shortestSide * 0.045).clamp(12.0, 22.0);
     
     for (double y = spacing / 2; y < size.height; y += spacing) {
       // Offset every other row for hex pattern
@@ -216,5 +273,6 @@ class _MetalMeshPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MetalMeshPainter oldDelegate) => 
+      oldDelegate.shortestSide != shortestSide;
 }

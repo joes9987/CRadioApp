@@ -193,19 +193,42 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
-    final buttonSize = screenWidth * 0.18;
-    final playButtonSize = screenWidth * 0.22;
+    final shortestSide = screenWidth < screenHeight ? screenWidth : screenHeight;
+    
+    // Responsive sizing with min/max bounds
+    final isSmallScreen = screenHeight < 700;
+    final spacingMultiplier = isSmallScreen ? 0.8 : 1.0;
+    
+    // Button sizes - responsive with constraints
+    final buttonSize = (screenWidth * 0.16).clamp(50.0, 80.0);
+    final playButtonSize = (screenWidth * 0.20).clamp(60.0, 95.0);
+    final buttonSpacing = (screenWidth * 0.035).clamp(10.0, 20.0);
+    
+    // Slider dimensions
+    final sliderHeight = (shortestSide * 0.06).clamp(20.0, 30.0);
+    final sliderThumbRadius = (sliderHeight / 2).clamp(10.0, 15.0);
+    final sliderPadding = screenWidth * 0.08;
+    
+    // Icon sizes
+    final iconSize = buttonSize * 0.5;
+    final playIconSize = playButtonSize * 0.55;
+    final loadingSize = playButtonSize * 0.4;
+    
+    // Border radius
+    final buttonRadius = (shortestSide * 0.02).clamp(6.0, 12.0);
+    final innerRadius = (shortestSide * 0.01).clamp(3.0, 6.0);
+    final innerMargin = (shortestSide * 0.01).clamp(3.0, 6.0);
     
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Volume Slider (full width, blue)
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+          padding: EdgeInsets.symmetric(horizontal: sliderPadding),
           child: Container(
-            height: 24,
+            height: sliderHeight,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(sliderHeight / 2),
               gradient: const LinearGradient(
                 colors: [
                   Color(0xFF1565C0),
@@ -232,9 +255,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 inactiveTrackColor: Colors.transparent,
                 thumbColor: Colors.white,
                 overlayColor: Colors.white.withOpacity(0.2),
-                trackHeight: 24,
-                thumbShape: const RoundSliderThumbShape(
-                  enabledThumbRadius: 12,
+                trackHeight: sliderHeight,
+                thumbShape: RoundSliderThumbShape(
+                  enabledThumbRadius: sliderThumbRadius,
                   elevation: 4,
                 ),
               ),
@@ -248,7 +271,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
           ),
         ),
         
-        SizedBox(height: screenHeight * 0.04),
+        SizedBox(height: screenHeight * 0.03 * spacingMultiplier),
         
         // Control buttons row
         Row(
@@ -262,16 +285,19 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 onTap: _toggleMute,
                 child: _buildSquareButton(
                   size: buttonSize,
+                  radius: buttonRadius,
+                  innerRadius: innerRadius,
+                  innerMargin: innerMargin,
                   child: Icon(
                     _isMuted ? Icons.volume_off : Icons.volume_up,
-                    size: buttonSize * 0.5,
+                    size: iconSize,
                     color: const Color(0xFF42A5F5),
                   ),
                 ),
               ),
             ),
             
-            SizedBox(width: screenWidth * 0.04),
+            SizedBox(width: buttonSpacing),
             
             // Play/Stop button (larger)
             Semantics(
@@ -281,26 +307,29 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                 onTap: _isLoading ? null : _togglePlayPause,
                 child: _buildSquareButton(
                   size: playButtonSize,
+                  radius: buttonRadius,
+                  innerRadius: innerRadius,
+                  innerMargin: innerMargin,
                   isPlayButton: true,
                   child: _isLoading
                       ? SizedBox(
-                          width: playButtonSize * 0.4,
-                          height: playButtonSize * 0.4,
-                          child: const CircularProgressIndicator(
-                            color: Color(0xFF42A5F5),
-                            strokeWidth: 3,
+                          width: loadingSize,
+                          height: loadingSize,
+                          child: CircularProgressIndicator(
+                            color: const Color(0xFF42A5F5),
+                            strokeWidth: (loadingSize * 0.1).clamp(2.0, 4.0),
                           ),
                         )
                       : Icon(
                           _isPlaying ? Icons.stop : Icons.play_arrow,
-                          size: playButtonSize * 0.6,
+                          size: playIconSize,
                           color: const Color(0xFF42A5F5),
                         ),
                 ),
               ),
             ),
             
-            SizedBox(width: screenWidth * 0.04),
+            SizedBox(width: buttonSpacing),
             
             // Info button
             GestureDetector(
@@ -328,9 +357,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               },
               child: _buildSquareButton(
                 size: buttonSize,
+                radius: buttonRadius,
+                innerRadius: innerRadius,
+                innerMargin: innerMargin,
                 child: Icon(
                   Icons.info_outline,
-                  size: buttonSize * 0.5,
+                  size: iconSize,
                   color: const Color(0xFF42A5F5),
                 ),
               ),
@@ -340,17 +372,25 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         
         // Error message
         if (_errorMessage != null) ...[
-          const SizedBox(height: 16),
+          SizedBox(height: screenHeight * 0.015),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
+            padding: EdgeInsets.symmetric(
+              horizontal: screenWidth * 0.04,
+              vertical: screenHeight * 0.01,
+            ),
             decoration: BoxDecoration(
               color: Colors.red.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(buttonRadius),
               border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
             ),
             child: Text(
               _errorMessage!,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontSize: (screenWidth * 0.03).clamp(10.0, 14.0),
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
         ],
@@ -360,6 +400,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
   Widget _buildSquareButton({
     required double size,
+    required double radius,
+    required double innerRadius,
+    required double innerMargin,
     required Widget child,
     bool isPlayButton = false,
   }) {
@@ -367,7 +410,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(radius),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -379,13 +422,13 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         ),
         border: Border.all(
           color: const Color(0xFF5a5a5a),
-          width: 2,
+          width: (size * 0.025).clamp(1.5, 3.0),
         ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.6),
-            blurRadius: 8,
-            offset: const Offset(2, 4),
+            blurRadius: size * 0.1,
+            offset: Offset(size * 0.025, size * 0.05),
           ),
           BoxShadow(
             color: const Color(0xFF3a3a3a).withOpacity(0.3),
@@ -395,9 +438,9 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         ],
       ),
       child: Container(
-        margin: const EdgeInsets.all(4),
+        margin: EdgeInsets.all(innerMargin),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(innerRadius),
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
