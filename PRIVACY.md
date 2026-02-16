@@ -4,7 +4,7 @@
 
 ## About the App
 
-Church 668 Radio is a mobile application for The Church of the First Born Assembly Miracle Center. The app streams The Old Time Gospel Hour Family Radio and provides links to connect with the church via social media and the church website.
+Church 668 Radio is a mobile application for The Church of the First Born Assembly Miracle Center. The app streams THE OLD TIME GOSPEL HOUR FAMILY RADIO and provides links to connect with the church via social media and the church website.
 
 ## Data Collection
 
@@ -35,7 +35,7 @@ When you tap these links, you leave our app. The privacy practices of those thir
 
 ## Audio Streaming
 
-Radio audio is streamed from a third-party service. The stream is played directly on your device. We do not record, log, or transmit any information about your listening.
+Radio audio is streamed from THE OLD TIME GOSPEL HOUR FAMILY RADIO via a third-party streaming service. The stream is played directly on your device. We do not record, log, or transmit any information about your listening.
 
 ## Children's Privacy
 
