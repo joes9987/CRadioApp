@@ -1,10 +1,10 @@
-# Privacy Policy for Church 668 Radio
+# Privacy Policy for The Old Time Gospel Hour Family Radio
 
 **Last updated: February 13, 2025**
 
 ## About the App
 
-Church 668 Radio is a mobile application for The Church of the First Born Assembly Miracle Center. The app streams THE OLD TIME GOSPEL HOUR FAMILY RADIO and provides links to connect with the church via social media and the church website.
+The Old Time Gospel Hour Family Radio is a mobile application for The Church of the First Born Assembly Miracle Center. The app streams THE OLD TIME GOSPEL HOUR FAMILY RADIO and provides links to connect with the church via social media and the church website.
 
 ## Data Collection
 

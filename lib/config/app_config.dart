@@ -1,4 +1,7 @@
 class AppConfig {
+  // App display name
+  static const String appName = 'The Old Time Gospel Hour Family Radio';
+  
   // Church Information
   static const String churchName = 'The Church of the First Born Assembly Miracle Center';
   static const String tagline = 'Bringing Hope to the World';

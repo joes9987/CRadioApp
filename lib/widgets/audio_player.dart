@@ -343,7 +343,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                     return AlertDialog(
                       backgroundColor: const Color(0xFF1a1a1a),
                       title: Text(
-                        'Church 668 Radio',
+                        AppConfig.appName,
                         style: TextStyle(color: Colors.white, fontSize: titleSize),
                       ),
                       content: Text(

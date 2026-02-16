@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
     <application
-        android:label="Church 668 Radio"
+        android:label="The Old Time Gospel Hour Family Radio"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

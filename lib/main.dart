@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:audio_service/audio_service.dart';
 import 'theme/app_theme.dart';
+import 'config/app_config.dart';
 import 'screens/home_screen.dart';
 import 'services/audio_handler.dart';
 
@@ -34,7 +35,7 @@ Future<void> main() async {
       builder: () => RadioAudioHandler(),
       config: AudioServiceConfig(
         androidNotificationChannelId: 'com.church668.radio.audio',
-        androidNotificationChannelName: 'Church 668 Radio',
+        androidNotificationChannelName: AppConfig.appName,
         androidNotificationChannelDescription: 'Radio streaming notification',
         androidNotificationOngoing: true,
         androidStopForegroundOnPause: false,
@@ -62,7 +63,7 @@ class ChurchRadioApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Church 668 Radio',
+      title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.themeData,
       home: const HomeScreen(),
