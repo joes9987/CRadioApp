@@ -26,11 +26,11 @@ class HomeScreen extends StatelessWidget {
     final logoWidth = (screenWidth * 0.75).clamp(200.0, 400.0);
     final logoHeight = (screenHeight * 0.25 * spacingMultiplier).clamp(150.0, 300.0);
     
-    // Text sizes - responsive with min/max
-    final headerFontSize = (screenWidth * 0.06).clamp(18.0, 28.0);
-    final churchNameFontSize = (screenWidth * 0.05).clamp(14.0, 24.0);
-    final taglineFontSize = (screenWidth * 0.05).clamp(14.0, 22.0);
-    final connectFontSize = (screenWidth * 0.035).clamp(10.0, 16.0);
+    // Base font sizes for width-fitting text (FittedBox.fitWidth scales to fill)
+    const double headerFontSize = 56;
+    const double churchNameFontSize = 52;  // Larger than tagline
+    const double taglineFontSize = 28;
+    const double connectFontSize = 24;
     
     return Scaffold(
       body: Container(
@@ -38,10 +38,23 @@ class HomeScreen extends StatelessWidget {
         height: double.infinity,
         child: Stack(
           children: [
-            // Metal mesh background
+            // Background image from fwdradioappimage
             Positioned.fill(
-              child: CustomPaint(
-                painter: _MetalMeshPainter(shortestSide: shortestSide),
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('fwdradioappimage/e6a411e538cb8429b8293504fa06643f.jpg'),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  // Dark overlay for text readability
+                  Container(
+                    color: Colors.black.withOpacity(0.45),
+                  ),
+                ],
               ),
             ),
             
@@ -51,18 +64,14 @@ class HomeScreen extends StatelessWidget {
                 builder: (context, constraints) {
                   return SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minHeight: constraints.maxHeight,
-                      ),
-                      child: IntrinsicHeight(
-                        child: Column(
-                          children: [
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                             // Radio Station Name at top (header bar)
                             Container(
                               width: double.infinity,
                               padding: EdgeInsets.symmetric(
-                                vertical: screenHeight * 0.015 * spacingMultiplier,
+                                vertical: screenHeight * 0.02 * spacingMultiplier,
                                 horizontal: screenWidth * 0.04,
                               ),
                               decoration: BoxDecoration(
@@ -83,7 +92,8 @@ class HomeScreen extends StatelessWidget {
                                 ),
                               ),
                               child: FittedBox(
-                                fit: BoxFit.scaleDown,
+                                fit: BoxFit.fitWidth,
+                                alignment: Alignment.center,
                                 child: Text(
                                   AppConfig.radioStationName.toUpperCase(),
                                   style: TextStyle(
@@ -140,21 +150,48 @@ class HomeScreen extends StatelessWidget {
                             
                             SizedBox(height: screenHeight * 0.02 * spacingMultiplier),
                             
-                            // Church name (centered, below logo)
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                            // Church name ribbon (taller vertical space, more width for larger text)
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: screenWidth * 0.02,
+                                vertical: screenHeight * 0.06 * spacingMultiplier,
+                              ),
+                              margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.35),
+                                borderRadius: BorderRadius.circular(shortestSide * 0.02),
+                              ),
                               child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  AppConfig.churchName.toUpperCase(),
-                                  style: TextStyle(
-                                    fontSize: churchNameFontSize,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 0.5,
-                                    height: 1.2,
-                                  ),
-                                  textAlign: TextAlign.center,
+                                fit: BoxFit.fitWidth,
+                                alignment: Alignment.center,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'CHURCH OF THE FIRST BORN ASSEMBLY',
+                                      style: TextStyle(
+                                        fontSize: churchNameFontSize,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                        height: 1.2,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                    SizedBox(height: churchNameFontSize * 0.15),
+                                    Text(
+                                      'MIRACLE CENTER',
+                                      style: TextStyle(
+                                        fontSize: churchNameFontSize,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        letterSpacing: 0.5,
+                                        height: 1.2,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -165,7 +202,8 @@ class HomeScreen extends StatelessWidget {
                             Padding(
                               padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.1),
                               child: FittedBox(
-                                fit: BoxFit.scaleDown,
+                                fit: BoxFit.fitWidth,
+                                alignment: Alignment.center,
                                 child: Text(
                                   AppConfig.tagline,
                                   style: GoogleFonts.playfairDisplay(
@@ -179,12 +217,7 @@ class HomeScreen extends StatelessWidget {
                               ),
                             ),
                             
-                            // Flexible spacer - pushes controls to bottom
-                            Expanded(
-                              child: SizedBox(
-                                height: screenHeight * 0.02,
-                              ),
-                            ),
+                            SizedBox(height: screenHeight * 0.06 * spacingMultiplier),
                             
                             // Audio Player (volume slider + buttons)
                             const AudioPlayerWidget(),
@@ -192,15 +225,19 @@ class HomeScreen extends StatelessWidget {
                             SizedBox(height: screenHeight * 0.015 * spacingMultiplier),
                             
                             // "CONNECT WITH US" text
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Text(
-                                'CONNECT WITH US',
-                                style: TextStyle(
-                                  fontSize: connectFontSize,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.lightBlue,
-                                  letterSpacing: 2,
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.08),
+                              child: FittedBox(
+                                fit: BoxFit.fitWidth,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'CONNECT WITH US',
+                                  style: TextStyle(
+                                    fontSize: connectFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.lightBlue,
+                                    letterSpacing: 2,
+                                  ),
                                 ),
                               ),
                             ),
@@ -213,8 +250,6 @@ class HomeScreen extends StatelessWidget {
                             SizedBox(height: screenHeight * 0.015 * spacingMultiplier),
                           ],
                         ),
-                      ),
-                    ),
                   );
                 },
               ),
@@ -224,55 +259,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-// Custom painter for metal mesh perforated pattern
-class _MetalMeshPainter extends CustomPainter {
-  final double shortestSide;
-  
-  _MetalMeshPainter({required this.shortestSide});
-  
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Dark metal background
-    final bgPaint = Paint()
-      ..color = const Color(0xFF1a1a1a);
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-    
-    // Perforated holes
-    final holePaint = Paint()
-      ..color = const Color(0xFF0a0a0a)
-      ..style = PaintingStyle.fill;
-    
-    // Highlight for 3D effect
-    final highlightPaint = Paint()
-      ..color = const Color(0xFF2a2a2a)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 0.5;
-    
-    // Scale hole size and spacing based on screen size
-    final double holeRadius = (shortestSide * 0.012).clamp(3.0, 6.0);
-    final double spacing = (shortestSide * 0.045).clamp(12.0, 22.0);
-    
-    for (double y = spacing / 2; y < size.height; y += spacing) {
-      // Offset every other row for hex pattern
-      double offsetX = (y ~/ spacing) % 2 == 0 ? 0 : spacing / 2;
-      for (double x = spacing / 2 + offsetX; x < size.width; x += spacing) {
-        // Draw hole (dark center)
-        canvas.drawCircle(Offset(x, y), holeRadius, holePaint);
-        // Draw subtle highlight on top edge for depth
-        canvas.drawArc(
-          Rect.fromCircle(center: Offset(x, y), radius: holeRadius),
-          3.14,
-          3.14,
-          false,
-          highlightPaint,
-        );
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _MetalMeshPainter oldDelegate) => 
-      oldDelegate.shortestSide != shortestSide;
 }

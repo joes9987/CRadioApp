@@ -5,6 +5,7 @@ import 'package:audio_session/audio_session.dart';
 import '../config/app_config.dart';
 import '../main.dart';
 import '../services/battery_optimization.dart';
+import '../utils/text_scale.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   const AudioPlayerWidget({super.key});
@@ -336,23 +337,27 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               onTap: () {
                 showDialog(
                   context: context,
-                  builder: (context) => AlertDialog(
-                    backgroundColor: const Color(0xFF1a1a1a),
-                    title: const Text(
-                      'Church 668 Radio',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    content: const Text(
-                      'Church of the Firstborn Assembly\nBringing Hope to the World\n\nThe Old Time Gospel Hour Family Radio',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Close'),
+                  builder: (dialogContext) {
+                    final titleSize = TextScale.fontSize(dialogContext, 26);
+                    final bodySize = TextScale.fontSize(dialogContext, 20);
+                    return AlertDialog(
+                      backgroundColor: const Color(0xFF1a1a1a),
+                      title: Text(
+                        'Church 668 Radio',
+                        style: TextStyle(color: Colors.white, fontSize: titleSize),
                       ),
-                    ],
-                  ),
+                      content: Text(
+                        'Church of the Firstborn Assembly\nBringing Hope to the World\n\nThe Old Time Gospel Hour Family Radio',
+                        style: TextStyle(color: Colors.white70, fontSize: bodySize),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text('Close'),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
               child: _buildSquareButton(
@@ -388,7 +393,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
               _errorMessage!,
               style: TextStyle(
                 color: Colors.redAccent,
-                fontSize: (screenWidth * 0.03).clamp(10.0, 14.0),
+                fontSize: TextScale.fontSize(context, 14),
               ),
               textAlign: TextAlign.center,
             ),
